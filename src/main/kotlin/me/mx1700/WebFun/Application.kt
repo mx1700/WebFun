@@ -1,76 +1,69 @@
 package me.mx1700.WebFun
 import me.mx1700.WebFun.Annotations.Get
 import me.mx1700.WebFun.Annotations.Post
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
+import me.mx1700.WebFun.Annotations.Route
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
+import javax.servlet.http.HttpServletResponse
+import javax.xml.bind.TypeConstraintException
 import kotlin.reflect.jvm.javaType
-import kotlin.reflect.jvm.jvmErasure
 import kotlin.reflect.jvm.kotlinFunction
 
-@Configuration
-@ComponentScan
-open class Application {
+open class Application(routeClass: String) {
 
-    lateinit var routes: List<RouteInfo>
+    var routes: List<RouteInfo>
 
     companion object {
-        val context = AnnotationConfigApplicationContext(Application::class.java)
-        init {
-            context.beanFactory.registerSingleton("test", "hello123123")
-        }
-
-        fun getApp(): Application {
-            return context.getBean(Application::class.java)
+        inline fun getApp(): Application {
+            val className = Thread.currentThread().stackTrace[1].className;
+            return Application(className)
         }
     }
 
-    inline fun run(): Application {
-        //context.beanDefinitionNames.forEach { println(it) }
-        //println(context.getBean("test"))
-        val className = Thread.currentThread().stackTrace[1].className;
-        routes = scanRoutes(className)
+    init {
+        routes = scanRoutes(routeClass)
         routes.forEach { println(it) }
-        return this
     }
 
-    fun testRoute(method: String, path: String, query: Map<String, Any>) {
-        val action = routes.asSequence().filter { it.method == method && it.path == path }.first().action
+    fun handle(req: Request): Response {
+        val action = routes.asSequence().filter { it.method == req.method && it.path == req.path }
+                .firstOrNull()?.action ?: return Response(listOf(), "Not found.", HttpServletResponse.SC_NOT_FOUND)
         val kFun = action.kotlinFunction!!
-        val params = kFun.parameters.map {
-            val type = it.type.javaType.typeName.split('.').last().decapitalize()
+        val params = kFun.parameters.mapNotNull {
+            //val type = it.type.javaType.typeName.split('.').last().decapitalize()
+            val value = req.query(it.name!!)
             when {
-                context.containsBean(type) -> it to context.getBean(type)
-                query.containsKey(it.name) -> it to query[it.name]
-                else -> null
+                it.type.javaType.typeName == Request::class.java.name -> it to req
+                value != null -> it to value    //匹配成功
+                it.isOptional -> null           //最后确认选填类型，可以不匹配
+                else -> throw TypeConstraintException("路由参数 ${it.name} 未匹配")
             }
-        }.filterNotNull().toMap()
-
-        //TODO:基础类型转换，数组支持
-//        params.forEach({k, v -> println("${k.name}: $v")})
-//        println("----------------")
-        val r = kFun.callBy(params)
-        println(r)
+        }.toMap()
+        val res = kFun.callBy(params)
+        return when(res) {
+            is Response -> res
+            is String -> Response(listOf(), res)
+            else -> TODO()
+        }
     }
 
-    fun scanRoutes(className: String): List<RouteInfo> {
-        val routes = arrayListOf<RouteInfo>()
+    fun testRoute(method: String, path: String, query: List<Pair<String, String>>) {
+        val res = handle(Request(path, method, "", listOf(), query, listOf(), listOf(), null))
+        println(res)
+    }
+
+    private fun scanRoutes(className: String): List<RouteInfo> {
         val clazz = Class.forName(className)
-        clazz.methods.filter { Modifier.isStatic(it.modifiers) }.map {
-            val method = it
-//            method.parameters.forEach { println(method.name + ":" + it.name) }
-            routes.addAll(it.annotations.map {
+        val routes = clazz.methods.filter { Modifier.isStatic(it.modifiers) }.fold(mutableListOf<RouteInfo>()) { r, action ->
+            action.annotations.forEach {
                 when (it) {
-                    is Get -> RouteInfo("GET", it.path, method)
-                    is Post -> RouteInfo("POST", it.path, method)
-                    else -> null
+                    is Get -> r.add(RouteInfo("GET", it.path, action))
+                    is Post -> r.add(RouteInfo("POST", it.path, action))
+                    is Route -> it.methods.map { m -> r.add(RouteInfo(m, it.path, action)) }
+//                    else -> null
                 }
-            }.filterNotNull())
+            }
+            r
         }
         return routes
     }

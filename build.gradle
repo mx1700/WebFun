@@ -2,7 +2,7 @@ group 'me.mx1700'
 version '1.0-SNAPSHOT'
 
 buildscript {
-    ext.kotlin_version = '1.1.4'
+    ext.kotlin_version = '1.1.4-3'
 
     repositories {
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
@@ -17,6 +17,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 
 sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
@@ -24,9 +25,13 @@ repositories {
 }
 
 dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.24'
+    compile 'org.slf4j:slf4j-simple:1.7.24'
+
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
     compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
-    compile "org.springframework:spring-context:4.3.10.RELEASE"
+
+//    compile "org.springframework:spring-context:4.3.10.RELEASE"
     compile "javax.servlet:javax.servlet-api:3.1.0"
     compile "org.eclipse.jetty.aggregate:jetty-all:9.4.2.v20170220"
 
