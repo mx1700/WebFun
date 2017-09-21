@@ -20,12 +20,11 @@ class ServletHandler(
                         request: HttpServletRequest,
                         response: HttpServletResponse) {
 
-        val isMultipart = request.contentType.startsWith("multipart/form-data");
+        val isMultipart = request.contentType != null && request.contentType.startsWith("multipart/form-data");
         if (isMultipart) {
             request.setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, MultipartConfigElement(
                     System.getProperty("java.io.tmpdir")))
         }
-        response.status = HttpServletResponse.SC_NOT_FOUND
 
         val req = me.mx1700.WebFun.Request(
                 request.pathInfo,
@@ -35,10 +34,11 @@ class ServletHandler(
                 request.parameterNames.asSequence().map { it to request.getParameter(it) }.toList(),
                 request.parameterNames.asSequence().map { it to request.getParameter(it) }.toList(),
                 if(isMultipart) request.parts.toList() else listOf<Part>(),
-                null   //TODO:未完成
+                request.inputStream
         )
+
         val resp = run(req)
-        response.contentType = resp.header("contentType") ?: "text/html; charset=utf-8"
+        resp.header.forEach({ (name, value) -> response.addHeader(name, value) })
         response.status = resp.status
         response.writer.print(resp.body)
         baseRequest.isHandled = true

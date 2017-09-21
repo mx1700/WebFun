@@ -1,5 +1,6 @@
 package me.mx1700.WebFun
 
+import javax.servlet.ServletInputStream
 import javax.servlet.http.Part
 
 data class Request(
@@ -10,7 +11,7 @@ data class Request(
         val query: List<Pair<String, String>>,
         val form: List<Pair<String, String>>,
         val part: List<Part>,
-        val body: String?
+        val body: ServletInputStream
 ) {
     fun header(name: String) = header.firstOrNull { it.first.toLowerCase() == name.toLowerCase() }?.second
     fun query(name: String) = query.firstOrNull { it.first.toLowerCase() == name.toLowerCase() }?.second
