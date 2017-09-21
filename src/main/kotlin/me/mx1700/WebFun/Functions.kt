@@ -12,3 +12,5 @@ inline fun timer(action: () -> Unit, count: Int) {
     val endTime = System.currentTimeMillis() //获取结束时间
     System.out.println("$count 次运行时间： " + (endTime - startTime) + "ms")
 }
+
+inline fun currentClassName() = Thread.currentThread().stackTrace[1].className;

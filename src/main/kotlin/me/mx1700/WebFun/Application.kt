@@ -13,24 +13,22 @@ import kotlin.reflect.jvm.kotlinFunction
 
 open class Application(routeClass: String) {
 
-    var routes: List<RouteInfo>
+    private val router: Router = Router { scanClass(routeClass) }
 
     companion object {
         inline fun getApp(): Application {
-            val className = Thread.currentThread().stackTrace[1].className;
+            val className = currentClassName()
             return Application(className)
         }
     }
 
-    init {
-        routes = scanRoutes(routeClass)
-        routes.forEach { println(it) }
-    }
-
     fun handle(req: Request): Response {
-        val action = routes.asSequence().filter { it.method == req.method && it.path == req.path }
-                .firstOrNull()?.action ?: return Response("Not found.", listOf(), HttpServletResponse.SC_NOT_FOUND)
-        val kFun = action.kotlinFunction!!
+        val match = router.matches(req.method, req.path).firstOrNull()
+                ?: return Response("Not found.", listOf(), HttpServletResponse.SC_NOT_FOUND)
+
+        val a = match.info.action
+        val aaa = match.info.action.kotlinFunction
+        val kFun = match.info.action.kotlinFunction!!
         val params = kFun.parameters.mapNotNull {
             //val type = it.type.javaType.typeName.split('.').last().decapitalize()
             val value = req.query(it.name!!)
@@ -69,22 +67,5 @@ open class Application(routeClass: String) {
         }))
         println(res)
     }
-
-    private fun scanRoutes(className: String): List<RouteInfo> {
-        val clazz = Class.forName(className)
-        val routes = clazz.methods.filter { Modifier.isStatic(it.modifiers) }.fold(mutableListOf<RouteInfo>()) { r, action ->
-            action.annotations.forEach {
-                when (it) {
-                    is Get -> r.add(RouteInfo("GET", it.path, action))
-                    is Post -> r.add(RouteInfo("POST", it.path, action))
-                    is Route -> it.methods.map { m -> r.add(RouteInfo(m, it.path, action)) }
-//                    else -> null
-                }
-            }
-            r
-        }
-        return routes
-    }
 }
 
-data class RouteInfo(val method: String,val path: String,val action: Method)
