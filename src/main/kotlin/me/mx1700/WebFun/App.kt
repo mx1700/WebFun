@@ -7,8 +7,12 @@ fun main(args: Array<String>) {
     app.run()
 }
 
-@Route(path = "/")
+@Route("/")
 fun index(name: String = "Tom", req: Request): String {
     return "hello, $name, method: ${req.method}"
 }
 
+@Get("/test")
+fun test(): String {
+    return "test111"
+}
