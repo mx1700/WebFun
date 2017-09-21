@@ -51,7 +51,7 @@ fun scanClass(className: String): List<RouteConfig> {
 }
 
 private fun getRulesMap(arr: Array<String>): Map<String, String> {
-    return arr.map { it.split(':', limit = 1) }.map { it[0] to it[1] }.toMap()
+    return arr.map { it.split(':', limit = 2) }.map { it[0] to it[1] }.toMap()
 }
 
 /**
