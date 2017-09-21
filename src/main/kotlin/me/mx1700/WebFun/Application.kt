@@ -1,9 +1,4 @@
 package me.mx1700.WebFun
-import me.mx1700.WebFun.Annotations.Get
-import me.mx1700.WebFun.Annotations.Post
-import me.mx1700.WebFun.Annotations.Route
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
 import javax.servlet.http.HttpServletResponse
@@ -26,14 +21,14 @@ open class Application(routeClass: String) {
         val match = router.matches(req.method, req.path).firstOrNull()
                 ?: return Response("Not found.", listOf(), HttpServletResponse.SC_NOT_FOUND)
 
-        val a = match.info.action
-        val aaa = match.info.action.kotlinFunction
         val kFun = match.info.action.kotlinFunction!!
         val params = kFun.parameters.mapNotNull {
             //val type = it.type.javaType.typeName.split('.').last().decapitalize()
             val value = req.query(it.name!!)
             when {
                 it.type.javaType.typeName == Request::class.java.name -> it to req
+                !it.name.isNullOrBlank() && match.parameters.containsKey(it.name!!) && !match.parameters[it.name!!].isNullOrEmpty()
+                            -> it to match.parameters[it.name!!]
                 value != null -> it to value    //匹配成功
                 it.isOptional -> null           //最后确认选填类型，可以不匹配
                 else -> throw TypeConstraintException("路由参数 ${it.name} 未匹配")

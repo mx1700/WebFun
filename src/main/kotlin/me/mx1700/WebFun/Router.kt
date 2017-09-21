@@ -37,7 +37,7 @@ data class RouteMatch<T>(
 
 fun scanClass(className: String): List<RouteConfig> {
     val clazz = Class.forName(className)
-    return clazz.methods.filter { Modifier.isStatic(it.modifiers) }
+    return clazz.methods.filter { Modifier.isStatic(it.modifiers) && !it.name.contains('$') }
             .fold(mutableListOf()) { r, action ->
                 action.annotations.forEach {
                     when (it) {
@@ -105,7 +105,6 @@ class PathMatcher<T>(private val routes: List<RouterItem<T>>) {
             m.appendReplacement(urlRegex, "(?<$1>$rule)")
         }
         m.appendTail(urlRegex)
-        println(urlRegex)
         return Pattern.compile("^$urlRegex$") to params
     }
 
