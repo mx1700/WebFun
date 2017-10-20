@@ -1,4 +1,4 @@
-package me.mx1700.WebFun
+package me.mx1700.webfun
 
 inline fun timer(action: () -> Unit, count: Int) {
     val startTime = System.currentTimeMillis()   //获取开始时间

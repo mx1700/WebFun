@@ -1,7 +1,7 @@
-package me.mx1700.WebFun
-import me.mx1700.WebFun.Annotations.ErrorHandler
-import me.mx1700.WebFun.Annotations.Get
-import me.mx1700.WebFun.Annotations.Route
+package me.mx1700.webfun
+import me.mx1700.webfun.Annotations.ErrorHandler
+import me.mx1700.webfun.Annotations.Get
+import me.mx1700.webfun.Annotations.Route
 import java.lang.Exception
 
 fun main(args: Array<String>) {

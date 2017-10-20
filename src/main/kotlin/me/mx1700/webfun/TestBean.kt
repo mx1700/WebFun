@@ -1,4 +1,4 @@
-package me.mx1700.WebFun
+package me.mx1700.webfun
 
 //import org.springframework.stereotype.Service
 

@@ -1,4 +1,4 @@
-package me.mx1700.WebFun
+package me.mx1700.webfun
 
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.servlet.http.Part
 
 class ServletHandler(
-        private val run: (request: me.mx1700.WebFun.Request) -> Response
+        private val run: (request: me.mx1700.webfun.Request) -> Response
 ) : AbstractHandler() {
 
     @Throws(IOException::class, ServletException::class)
@@ -27,7 +27,7 @@ class ServletHandler(
                     System.getProperty("java.io.tmpdir")))
         }
 
-        val req = me.mx1700.WebFun.Request(
+        val req = me.mx1700.webfun.Request(
                 request.pathInfo,
                 request.method,
                 request.remoteHost,

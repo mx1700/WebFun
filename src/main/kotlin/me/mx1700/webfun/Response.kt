@@ -1,9 +1,9 @@
-package me.mx1700.WebFun
+package me.mx1700.webfun
 
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 
-val defaultHeader = listOf("content-type" to "text/html; charset=utf-8", "PoweredBy" to "WebFun")
+val defaultHeader = listOf("content-type" to "text/html; charset=utf-8", "PoweredBy" to "webfun")
 
 data class Response(
         val body: Body<*>,

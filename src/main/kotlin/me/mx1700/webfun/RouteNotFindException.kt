@@ -1,3 +1,3 @@
-package me.mx1700.WebFun
+package me.mx1700.webfun
 
 class RouteNotFindException: Exception()

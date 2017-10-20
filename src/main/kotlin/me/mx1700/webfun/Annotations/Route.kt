@@ -1,4 +1,4 @@
-package me.mx1700.WebFun.Annotations
+package me.mx1700.webfun.Annotations
 
 
 @Target(AnnotationTarget.FUNCTION)

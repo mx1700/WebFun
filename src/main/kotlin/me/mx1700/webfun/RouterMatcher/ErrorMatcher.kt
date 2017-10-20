@@ -1,4 +1,4 @@
-package me.mx1700.WebFun.RouterMatcher
+package me.mx1700.webfun.RouterMatcher
 
 class ErrorMatcher<T>(private val routes: List<RouteItem<T>>) {
 

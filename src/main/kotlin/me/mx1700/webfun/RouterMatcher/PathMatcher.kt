@@ -1,6 +1,6 @@
-package me.mx1700.WebFun.RouterMatcher
+package me.mx1700.webfun.RouterMatcher
 
-import me.mx1700.WebFun.RouteMatch
+import me.mx1700.webfun.RouteMatch
 import java.util.regex.Pattern
 import kotlin.coroutines.experimental.buildSequence
 

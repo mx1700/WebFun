@@ -1,13 +1,12 @@
-package me.mx1700.WebFun
+package me.mx1700.webfun
 
-import me.mx1700.WebFun.Annotations.ErrorHandler
-import me.mx1700.WebFun.Annotations.Get
-import me.mx1700.WebFun.Annotations.Post
-import me.mx1700.WebFun.Annotations.Route
-import me.mx1700.WebFun.RouterMatcher.PathMatcher
+import me.mx1700.webfun.Annotations.ErrorHandler
+import me.mx1700.webfun.Annotations.Get
+import me.mx1700.webfun.Annotations.Post
+import me.mx1700.webfun.Annotations.Route
+import me.mx1700.webfun.RouterMatcher.PathMatcher
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.kotlinFunction
 
