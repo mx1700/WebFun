@@ -44,16 +44,17 @@ open class Application(routeClass: String) {
         val kFun = routeMatch.info.action.kotlinFunction!!
         val params = kFun.parameters.mapNotNull {
             //val type = it.type.javaType.typeName.split('.').last().decapitalize()
+            val paramClass = Class.forName(it.type.javaType.typeName).kotlin
             val value = req.query(it.name!!)
             when {
-                it.type.javaType.typeName == Request::class.java.name -> it to req
+                Request::class.isSuperclassOf(paramClass) -> it to req
                 !it.name.isNullOrBlank() &&
                         routeMatch.parameters.containsKey(it.name!!) &&
                         !routeMatch.parameters[it.name!!].isNullOrEmpty()
-                            -> it to routeMatch.parameters[it.name!!]
+                            -> it to routeMatch.parameters[it.name!!]   //路由参数匹配
 
-                value != null -> it to value    //匹配成功
-                it.isOptional -> null           //最后确认选填类型，可以不匹配
+                value != null -> it to value    //query 匹配
+                it.isOptional -> null           //可选参数，可以不匹配
                 else -> throw TypeConstraintException("路由参数 ${it.name} 未匹配")
             }
         }.toMap()
@@ -68,10 +69,10 @@ open class Application(routeClass: String) {
 
         val kFun = route.action.kotlinFunction!!
         val params = kFun.parameters.mapNotNull {
-            val kClass = Class.forName(it.type.javaType.typeName).kotlin
+            val paramClass = Class.forName(it.type.javaType.typeName).kotlin
             when {
-                Request::class.isSuperclassOf(kClass) -> it to req
-                kClass.isInstance(err) -> it to err
+                Request::class.isSuperclassOf(paramClass) -> it to req
+                paramClass.isInstance(err) -> it to err
                 it.isOptional -> null           //最后确认选填类型，可以不匹配
                 else -> throw TypeConstraintException("路由参数 ${it.name} 未匹配")
             }
