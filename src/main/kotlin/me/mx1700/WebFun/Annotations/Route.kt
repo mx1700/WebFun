@@ -14,3 +14,7 @@ annotation class Get(val path: String = "", val rules: Array<String> = arrayOf()
 @Target(AnnotationTarget.FUNCTION)
 @Repeatable
 annotation class Post(val path: String, val rules: Array<String> = arrayOf())
+
+@Target(AnnotationTarget.FUNCTION)
+@Repeatable
+annotation class ErrorHandler

@@ -1,34 +1,41 @@
 package me.mx1700.WebFun
 
+import me.mx1700.WebFun.Annotations.ErrorHandler
 import me.mx1700.WebFun.Annotations.Get
 import me.mx1700.WebFun.Annotations.Post
 import me.mx1700.WebFun.Annotations.Route
+import me.mx1700.WebFun.RouterMatcher.PathMatcher
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.util.regex.Pattern
-import kotlin.coroutines.experimental.buildSequence
+import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.jvm.javaType
+import kotlin.reflect.jvm.kotlinFunction
 
-class Router(private val init: Router.() -> List<RouteConfig>) {
-    private val routes = init(this)
-    private val matcher: PathMatcher<RouteConfig>
+class Router(private val routes: List<RouteConfig>) {
 
-    init {
-        matcher = PathMatcher(routes.map {
-            PathMatcher.RouterItem(it.path, it.rules, it)
-        })
-    }
+    constructor(init: () -> List<RouteConfig>): this(init())
+//    private val routes = init(this)
+    private val matcher: PathMatcher<RouteConfig> = PathMatcher(routes.map {
+        PathMatcher.RouterItem(it.path, it.rules, it)
+    })
 
     fun matches(method: String, path: String): Sequence<RouteMatch<RouteConfig>> {
         return matcher.matches(path).filter { it.info.method == method }
     }
+
+    val errorRouters by lazy { routes.filter { it.isErrorHandler } }
 }
 
 data class RouteConfig(
         val method: String,
         val path: String,
         val action: Method,
-        val rules: Map<String, String>
-)
+        val rules: Map<String, String>,
+        val exception: Class<*>? = null
+) {
+    constructor(exception: Class<*>, action: Method): this("", "", action, mapOf(), exception)
+    val isErrorHandler = exception != null
+}
 
 data class RouteMatch<T>(
         val parameters: Map<String, String>,
@@ -37,101 +44,35 @@ data class RouteMatch<T>(
 
 fun scanClass(className: String): List<RouteConfig> {
     val clazz = Class.forName(className)
-    return clazz.methods.filter { Modifier.isStatic(it.modifiers) && !it.name.contains('$') }
+    return getClassFunctions(clazz)
             .fold(mutableListOf()) { r, action ->
                 action.annotations.forEach {
                     when (it) {
                         is Get -> r.add(RouteConfig("GET", it.path, action, getRulesMap(it.rules)))
                         is Post -> r.add(RouteConfig("POST", it.path, action, getRulesMap(it.rules)))
                         is Route -> it.methods.map { m -> r.add(RouteConfig(m, it.path, action, getRulesMap(it.rules))) }
+                        is ErrorHandler -> r.add(RouteConfig(getErrorHandlerExceptionClass(action), action))
                     }
                 }
                 r
             }
 }
 
+private fun getErrorHandlerExceptionClass(action: Method): Class<*> {
+    val params = action.kotlinFunction!!.parameters
+    if (params.count() == 0) {
+        return Exception::class.java
+    }
+    val className = action.kotlinFunction!!.parameters[0].type.javaType.typeName
+    val clazz = Class.forName(className)
+    if (Exception::class.java.isAssignableFrom(clazz)) {
+        return clazz
+    }
+    throw Exception("ErrorHandler 第一个参数必须是 Exception 的子类")
+}
+
+private fun getClassFunctions(clazz: Class<*>) = clazz.methods.filter { Modifier.isStatic(it.modifiers) && !it.name.contains('$') }
+
 private fun getRulesMap(arr: Array<String>): Map<String, String> {
     return arr.map { it.split(':', limit = 2) }.map { it[0] to it[1] }.toMap()
-}
-
-/**
- * path 匹配 url
- * /index
- * /index[/]
- * /index[/{id}]    "id" to "\\d+"
- * /home/{aaa}
- */
-class PathMatcher<T>(private val routes: List<RouterItem<T>>) {
-    private val regexMatcher: UrlRegexMatcher<T>
-
-    init {
-        regexMatcher = UrlRegexMatcher(routes.map {
-            val (p, params) = buildRegex(it.path, it.rules)
-            UrlRegexMatcher.RouterItem(p, params, it.info)
-        })
-    }
-
-    data class RouterItem<T>(
-            /**
-             * path 规则
-             * 只支持 {PARAM} 和 []
-             * {} 表示参数，[] 表示可选内容
-             *
-             * 实例
-             * /index           匹配 "/index"
-             * /index[/]        匹配 "/index" 和 "/index/"
-             * /users/{id}      匹配 "/users/PARAM"
-             * /users[/{id}]    匹配 "/users" 和 "/users/PARAM"
-             * /u/{id}  "id" to "\\d+"  匹配 /u/123
-             */
-            val path: String,
-            val rules: Map<String, String>,
-            val info: T
-    )
-
-    private fun buildRegex(url: String, rules: Map<String, String>): Pair<Pattern, List<String>> {
-        val params = mutableListOf<String>()
-        val urlRegex = StringBuffer()
-
-        val pattern = "\\{(\\w+\\??)\\}";
-        val r = Pattern.compile(pattern);
-        val m = r.matcher(url.replace("[", "(").replace("]", ")?"))
-
-        while (m.find()) {
-            val param = m.group(1)
-            params.add(param)
-            // \ 和 $ 在 replace 时是特殊字符，需要转义
-            val rule = (rules[param] ?: "[^/.]+").replace("\\", "\\\\").replace("$", "\\$")
-            m.appendReplacement(urlRegex, "(?<$1>$rule)")
-        }
-        m.appendTail(urlRegex)
-        return Pattern.compile("^$urlRegex$") to params
-    }
-
-    fun matches(url: String): Sequence<RouteMatch<T>> {
-        return regexMatcher.matches(url)
-    }
-}
-
-/**
- * 正则匹配 url
- */
-class UrlRegexMatcher<T>(private val regexRoutes: List<RouterItem<T>>) {
-
-    data class RouterItem<T>(
-            val pattern: Pattern,
-            val paramNames: List<String>,
-            val info: T
-    )
-
-    fun matches(url: String): Sequence<RouteMatch<T>> {
-        return buildSequence {
-            for ((p, paramNames, info) in regexRoutes) {
-                val m = p.matcher (url);
-                if (m.find()) {
-                    yield(RouteMatch(paramNames.map { it to m.group(it) }.toMap(), info))
-                }
-            }
-        }
-    }
 }
