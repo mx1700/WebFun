@@ -4,6 +4,7 @@ import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import java.io.IOException
+import java.io.InputStream
 import javax.servlet.MultipartConfigElement
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
@@ -40,7 +41,12 @@ class ServletHandler(
         val resp = run(req)
         resp.header.forEach({ (name, value) -> response.addHeader(name, value) })
         response.status = resp.status
-        response.writer.print(resp.body)
+        val value = resp.body.value;
+        when (value) {
+            is String -> response.writer.print(value)
+            is InputStream -> value.copyTo(response.outputStream)
+        }
+
         baseRequest.isHandled = true
     }
 }
