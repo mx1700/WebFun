@@ -45,19 +45,20 @@ TODO
 1. json 支持
 1. 切换 undertow.io
 
+
 外观（API）
 -----------------------
 1. 路由（参数路由，路由参数注入）
 1. url_for 反向生成路由url （http://flask.pocoo.org/docs/0.12/quickstart/#url-building）
 1. req
 1. resp
-
 1. 静态文件
 1. 模板 （http://flask.pocoo.org/docs/0.12/quickstart/#rendering-templates）
 1. 配置文件 （https://github.com/npryce/konfig）
 1. 模块支持
 1. 调试模式
 1. 测试支持
+
 
 路由设计
 -----------------------
