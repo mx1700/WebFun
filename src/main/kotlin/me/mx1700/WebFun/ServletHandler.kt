@@ -51,7 +51,7 @@ class ServletHandler(
     }
 }
 
-fun Application.run(port: Int = 8080) {
+fun Application.run(port: Int) {
     val server = Server(port)
     val handle = ServletHandler(this::handle)
     server.handler = handle

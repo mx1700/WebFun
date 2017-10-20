@@ -7,7 +7,7 @@ WebFun
 ```kotlin
 fun main(args: Array<String>) {
     val app = Application.create(currentClassName())
-    app.run()
+    app.run(8080)
 }
 
 @Route("/")
