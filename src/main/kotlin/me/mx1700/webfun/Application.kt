@@ -55,6 +55,7 @@ open class Application(routeClass: String) {
 
                 value != null -> it to value    //query 匹配
                 it.isOptional -> null           //可选参数，可以不匹配
+                it.type.isMarkedNullable -> it to null  //可空参数
                 else -> throw TypeConstraintException("路由参数 ${it.name} 未匹配")
             }
         }.toMap()

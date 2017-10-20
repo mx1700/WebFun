@@ -11,12 +11,12 @@ fun main(args: Array<String>) {
 
 @Route("/")
 fun index(name: String = "Tom", req: Request): String {
-    throw Exception("aaa")
+    if (name == "") throw Exception("name 不能为空")
     return "hello, $name, method: ${req.method}"
 }
 
-@Get("/test1[/{id}]", rules = arrayOf("id:\\d+"))
-fun test1(id: String = "my id"): String {
+@Get("/test[/{id}]", rules = arrayOf("id:\\d+"))
+fun test(id: String?): String {
     return "test1:$id"
 }
 
