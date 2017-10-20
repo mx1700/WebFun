@@ -5,7 +5,7 @@ import me.mx1700.WebFun.Annotations.Route
 import java.lang.Exception
 
 fun main(args: Array<String>) {
-    val app = Application.create()
+    val app = Application.create(currentClassName())
     app.run()
 }
 
@@ -15,18 +15,14 @@ fun index(name: String = "Tom", req: Request): String {
     return "hello, $name, method: ${req.method}"
 }
 
-@Get("/test")
-fun test(): String {
-    return "test111"
-}
-
 @Get("/test1[/{id}]", rules = arrayOf("id:\\d+"))
-fun test1(id: String = "ididid"): String {
-    return "test1:${id}"
+fun test1(id: String = "my id"): String {
+    return "test1:$id"
 }
 
-fun test2(id: String): String {
-    return "test2:$id"
+@ErrorHandler
+fun err(err: RouteNotFindException): String {
+    return "404"
 }
 
 @ErrorHandler
