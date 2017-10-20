@@ -71,7 +71,8 @@ private fun getErrorHandlerExceptionClass(action: Method): Class<*> {
     throw Exception("ErrorHandler 第一个参数必须是 Exception 的子类")
 }
 
-private fun getClassFunctions(clazz: Class<*>) = clazz.methods.filter { Modifier.isStatic(it.modifiers) && !it.name.contains('$') }
+private fun getClassFunctions(clazz: Class<*>) =
+        clazz.methods.filter { Modifier.isStatic(it.modifiers) && !it.name.contains('$') }
 
 private fun getRulesMap(arr: Array<String>): Map<String, String> {
     return arr.map { it.split(':', limit = 2) }.map { it[0] to it[1] }.toMap()
